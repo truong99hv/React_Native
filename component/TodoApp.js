@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
+  Keyboard,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -17,11 +18,11 @@ const TodoApp = () => {
   const [todos, setTodos] = useState([]);
   const [textInput, setTextInput] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     getTodosFromUserDevice();
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     saveTodoToUserDevice(todos);
   }, [todos]);
 
@@ -36,6 +37,7 @@ const TodoApp = () => {
       };
       setTodos([...todos, newTodo]);
       setTextInput("");
+      Keyboard.dismiss();
     }
   };
 
@@ -72,7 +74,15 @@ const TodoApp = () => {
 
   const deleteTodo = (todoId) => {
     const newTodosItem = todos.filter((item) => item.id != todoId);
-    setTodos(newTodosItem);
+    Alert.alert("Confirm", "Remove todos?", [
+      {
+        text: "Yes",
+        onPress: () => setTodos(newTodosItem),
+      },
+      {
+        text: "No",
+      },
+    ]);
   };
 
   const clearAllTodos = () => {
@@ -99,10 +109,10 @@ const TodoApp = () => {
               textDecorationLine: todo?.completed ? "line-through" : "none",
             }}
           >
-            {todo?.task}
+            {todo.task}
           </Text>
         </View>
-        {!todo?.completed && (
+        {!todo.completed && (
           <TouchableOpacity onPress={() => markTodoComplete(todo.id)}>
             <View style={[styles.actionIcon, { backgroundColor: "green" }]}>
               <Icon name="done" size={20} color="white" />
@@ -146,6 +156,7 @@ const TodoApp = () => {
       <View style={styles.footer}>
         <View style={styles.inputContainer}>
           <TextInput
+            style={{ flex: 1 }}
             value={textInput}
             placeholder="Add Todo"
             onChangeText={(text) => setTextInput(text)}
@@ -171,6 +182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: COLORS.white,
   },
+
   inputContainer: {
     height: 50,
     paddingHorizontal: 20,
@@ -180,7 +192,11 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     marginRight: 20,
     borderRadius: 30,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
+
   iconContainer: {
     height: 50,
     width: 50,
@@ -199,6 +215,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     marginVertical: 10,
   },
+
   actionIcon: {
     height: 25,
     width: 25,
@@ -209,7 +226,9 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     borderRadius: 3,
   },
+
   header: {
+    marginTop: 20,
     padding: 20,
     flexDirection: "row",
     alignItems: "center",
