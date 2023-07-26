@@ -72,6 +72,17 @@ const TodoApp = () => {
     setTodos(newTodosItem);
   };
 
+  const resetTodo = (todoId) => {
+    const resetTodos = todos.map((item) => {
+      if (item.id == todoId) {
+        return { ...item, completed: false };
+      }
+      return item;
+    });
+
+    setTodos(resetTodos);
+  };
+
   const deleteTodo = (todoId) => {
     const newTodosItem = todos.filter((item) => item.id != todoId);
     Alert.alert("Confirm", "Remove todos?", [
@@ -112,10 +123,16 @@ const TodoApp = () => {
             {todo.task}
           </Text>
         </View>
-        {!todo.completed && (
+        {!todo.completed ? (
           <TouchableOpacity onPress={() => markTodoComplete(todo.id)}>
             <View style={[styles.actionIcon, { backgroundColor: "green" }]}>
               <Icon name="done" size={20} color="white" />
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => resetTodo(todo.id)}>
+            <View style={[styles.actionIcon, { backgroundColor: "grey" }]}>
+              <Icon name="replay" size={20} color="white" />
             </View>
           </TouchableOpacity>
         )}
