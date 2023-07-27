@@ -13,11 +13,13 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import IconItem from "./IconItem";
 
-const COLORS = { primary: "#1f145c", white: "#fff" };
+const COLORS = { primary: "#1f145c", white: "#fff", complete: "#4D801A" };
 
 const TodoApp = () => {
   const [todos, setTodos] = useState([]);
   const [textInput, setTextInput] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const [search, setSearch] = useState(false);
 
   useEffect(() => {
     getTodosFromUserDevice();
@@ -84,6 +86,17 @@ const TodoApp = () => {
     setTodos(resetTodos);
   };
 
+  const editTodo = (todoId, editedTask) => {
+    const editedTodos = todos.map((item) => {
+      if (item.id === todoId) {
+        return { ...item, task: editedTask };
+      }
+      return item;
+    });
+
+    setTodos(editedTodos);
+  };
+
   const deleteTodo = (todoId) => {
     const newTodosItem = todos.filter((item) => item.id != todoId);
     Alert.alert("Confirm", "Remove todos?", [
@@ -110,39 +123,84 @@ const TodoApp = () => {
   };
 
   const ListItem = ({ todo }) => {
+    const [editMode, setEditMode] = useState(false);
+    const [editedTask, setEditedTask] = useState(todo.task);
+
+    const handleEdit = () => {
+      if (!editMode) {
+        setEditMode(true);
+      } else {
+        editTodo(todo.id, editedTask);
+        setEditMode(false);
+      }
+    };
+
     return (
       <View style={styles.listItem}>
-        <View style={{ flex: 1 }}>
-          <Text
+        {editMode ? (
+          <View
             style={{
-              fontWeight: "bold",
-              fontSize: 15,
-              color: todo.completed ? "grey" : COLORS.primary,
-              textDecorationLine: todo.completed ? "line-through" : "none",
+              flexDirection: "row",
+              flex: 1,
+              justifyContent: "space-between",
             }}
           >
-            {todo.task}
-          </Text>
-        </View>
-        {!todo.completed ? (
-          <IconItem
-            IconName="done"
-            bgColor="green"
-            todo={() => markTodoComplete(todo.id)}
-          />
-        ) : (
-          <IconItem
-            IconName="replay"
-            bgColor="grey"
-            todo={() => resetTodo(todo.id)}
-          />
-        )}
+            <TextInput
+              value={editedTask}
+              onChangeText={(text) => setEditedTask(text)}
+              autoFocus
+              onBlur={handleEdit}
+              onSubmitEditing={handleEdit}
+            />
 
-        <IconItem
-          IconName="delete"
-          bgColor="red"
-          todo={() => deleteTodo(todo.id)}
-        />
+            <IconItem IconName="done" bgColor={COLORS.complete} />
+          </View>
+        ) : (
+          <View
+            style={{
+              flex: 1,
+              flexDirection: "row",
+            }}
+          >
+            <View style={{ marginRight: 10 }}>
+              {!todo.completed ? (
+                <IconItem
+                  IconName="done"
+                  bgColor={COLORS.complete}
+                  todo={() => markTodoComplete(todo.id)}
+                />
+              ) : (
+                <IconItem
+                  bgColor={COLORS.complete}
+                  todo={() => resetTodo(todo.id)}
+                />
+              )}
+            </View>
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: 15,
+                color: todo.completed ? "grey" : COLORS.primary,
+                textDecorationLine: todo.completed ? "line-through" : "none",
+              }}
+            >
+              {todo.task}
+            </Text>
+          </View>
+        )}
+        {editMode ? (
+          ""
+        ) : (
+          <View style={styles.listIcon}>
+            <IconItem IconName="edit" bgColor="blue" todo={handleEdit} />
+
+            <IconItem
+              IconName="delete"
+              bgColor="red"
+              todo={() => deleteTodo(todo.id)}
+            />
+          </View>
+        )}
       </View>
     );
   };
@@ -165,6 +223,12 @@ const TodoApp = () => {
         </Text>
         <Icon name="delete" size={25} color="red" onPress={clearAllTodos} />
       </View>
+
+      <View style={styles.filter}>
+        <View style={styles.search}>
+          <IconItem IconName="search" bgColor="grey" />
+        </View>
+      </View>
       <FlatList
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
@@ -173,12 +237,14 @@ const TodoApp = () => {
       />
 
       <View style={styles.footer}>
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, isFocused && styles.inputFocused]}>
           <TextInput
             style={{ flex: 1 }}
             value={textInput}
-            placeholder="Add Todo"
+            placeholder="Add Todo ..."
             onChangeText={(text) => setTextInput(text)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
         </View>
         <TouchableOpacity onPress={addTodo}>
@@ -216,6 +282,18 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
 
+  inputFocused: {
+    shadowColor: "blue",
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    elevation: 5,
+  },
+
   iconContainer: {
     height: 50,
     width: 50,
@@ -225,6 +303,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  listIcon: { flexDirection: "row" },
 
   listItem: {
     padding: 20,
