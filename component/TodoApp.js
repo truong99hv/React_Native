@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import IconItem from "./IconItem";
 
 const COLORS = { primary: "#1f145c", white: "#fff" };
 
@@ -116,31 +117,32 @@ const TodoApp = () => {
             style={{
               fontWeight: "bold",
               fontSize: 15,
-              color: COLORS.primary,
-              textDecorationLine: todo?.completed ? "line-through" : "none",
+              color: todo.completed ? "grey" : COLORS.primary,
+              textDecorationLine: todo.completed ? "line-through" : "none",
             }}
           >
             {todo.task}
           </Text>
         </View>
         {!todo.completed ? (
-          <TouchableOpacity onPress={() => markTodoComplete(todo.id)}>
-            <View style={[styles.actionIcon, { backgroundColor: "green" }]}>
-              <Icon name="done" size={20} color="white" />
-            </View>
-          </TouchableOpacity>
+          <IconItem
+            IconName="done"
+            bgColor="green"
+            todo={() => markTodoComplete(todo.id)}
+          />
         ) : (
-          <TouchableOpacity onPress={() => resetTodo(todo.id)}>
-            <View style={[styles.actionIcon, { backgroundColor: "grey" }]}>
-              <Icon name="replay" size={20} color="white" />
-            </View>
-          </TouchableOpacity>
+          <IconItem
+            IconName="replay"
+            bgColor="grey"
+            todo={() => resetTodo(todo.id)}
+          />
         )}
-        <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
-          <View style={styles.actionIcon}>
-            <Icon name="delete" size={20} color="white" />
-          </View>
-        </TouchableOpacity>
+
+        <IconItem
+          IconName="delete"
+          bgColor="red"
+          todo={() => deleteTodo(todo.id)}
+        />
       </View>
     );
   };
@@ -231,17 +233,6 @@ const styles = StyleSheet.create({
     elevation: 12,
     borderRadius: 7,
     marginVertical: 10,
-  },
-
-  actionIcon: {
-    height: 25,
-    width: 25,
-    backgroundColor: COLORS.white,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "red",
-    marginLeft: 5,
-    borderRadius: 3,
   },
 
   header: {
