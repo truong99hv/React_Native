@@ -12,14 +12,23 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import IconItem from "./IconItem";
+import SearchBarCustom from "./SearchBarCustom";
+import { CheckBox } from "react-native-elements";
 
-const COLORS = { primary: "#1f145c", white: "#fff", complete: "#4D801A" };
+const COLORS = {
+  primary: "#1f145c",
+  white: "#fff",
+  complete: "#4D801A",
+  grey: "#B2B6BC",
+};
 
 const TodoApp = () => {
   const [todos, setTodos] = useState([]);
   const [textInput, setTextInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [search, setSearch] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selectIndex, setSelectIndex] = useState("All");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
   useEffect(() => {
     getTodosFromUserDevice();
@@ -122,6 +131,67 @@ const TodoApp = () => {
     ]);
   };
 
+  const updateSearch = (search) => {
+    setSearch(search);
+  };
+
+  const handleSort = () => {
+    setSortOrder(sortOrder === "ASC" ? "DESC" : "ASC");
+    console.log("sorting");
+  };
+
+  const filterTasks = () => {
+    if (search === "") {
+      if (selectIndex === "Done") {
+        return todos.filter((todo) => todo.completed);
+      } else if (selectIndex === "Incomplete") {
+        return todos.filter((todo) => !todo.completed);
+      } else {
+        return todos;
+      }
+    } else {
+      let filteredBySearch = todos.filter((todo) =>
+        todo.task.toLowerCase().includes(search.toLowerCase())
+      );
+
+      if (selectIndex === "Done") {
+        return filteredBySearch.filter((todo) => todo.completed);
+      } else if (selectIndex === "Incomplete") {
+        return filteredBySearch.filter((todo) => !todo.completed);
+      } else {
+        return filteredBySearch;
+      }
+    }
+  };
+
+  // const filterTasks = () => {
+  //   let filteredTasks = todos.slice();
+
+  //   if (search !== "") {
+  //     filteredTasks = filteredTasks.filter((todo) =>
+  //       todo.task.toLowerCase().includes(search.toLowerCase())
+  //     );
+  //   }
+
+  //   if (selectIndex === "Done") {
+  //     filteredTasks = filteredTasks.filter((todo) => todo.completed);
+  //   } else if (selectIndex === "Incomplete") {
+  //     filteredTasks = filteredTasks.filter((todo) => !todo.completed);
+  //   }
+
+  //   if (sortOrder === "ASC") {
+  //     filteredTasks.sort((a, b) => a.task.localeCompare(b.task));
+  //   } else if (sortOrder === "DESC") {
+  //     filteredTasks.sort((a, b) => b.task.localeCompare(a.task));
+  //   }
+
+  //   return filteredTasks;
+  // };
+
+  const updateSelectIndex = (index) => {
+    setSelectIndex(index);
+  };
+
   const ListItem = ({ todo }) => {
     const [editMode, setEditMode] = useState(false);
     const [editedTask, setEditedTask] = useState(todo.task);
@@ -153,7 +223,12 @@ const TodoApp = () => {
               onSubmitEditing={handleEdit}
             />
 
-            <IconItem IconName="done" bgColor={COLORS.complete} />
+            <IconItem
+              IconName="done"
+              bgColor={COLORS.complete}
+              color={COLORS.white}
+              todo={() => handleSort}
+            />
           </View>
         ) : (
           <View
@@ -165,14 +240,16 @@ const TodoApp = () => {
             <View style={{ marginRight: 10 }}>
               {!todo.completed ? (
                 <IconItem
-                  IconName="done"
                   bgColor={COLORS.complete}
+                  color={COLORS.white}
                   todo={() => markTodoComplete(todo.id)}
                 />
               ) : (
                 <IconItem
                   bgColor={COLORS.complete}
                   todo={() => resetTodo(todo.id)}
+                  color={COLORS.white}
+                  IconName="done"
                 />
               )}
             </View>
@@ -192,12 +269,18 @@ const TodoApp = () => {
           ""
         ) : (
           <View style={styles.listIcon}>
-            <IconItem IconName="edit" bgColor="blue" todo={handleEdit} />
+            <IconItem
+              IconName="edit"
+              bgColor="blue"
+              todo={handleEdit}
+              color={COLORS.white}
+            />
 
             <IconItem
               IconName="delete"
               bgColor="red"
               todo={() => deleteTodo(todo.id)}
+              color={COLORS.white}
             />
           </View>
         )}
@@ -221,20 +304,102 @@ const TodoApp = () => {
         >
           TODO APP
         </Text>
-        <Icon name="delete" size={25} color="red" onPress={clearAllTodos} />
       </View>
-
-      <View style={styles.filter}>
-        <View style={styles.search}>
-          <IconItem IconName="search" bgColor="grey" />
+      {todos.length > 0 || filterTasks().length > 0 ? (
+        <View>
+          <SearchBarCustom
+            textSearch={search}
+            updateSearch={updateSearch}
+            backgroundColor={COLORS.grey}
+            placeholderTextColor={COLORS.primary}
+            color={COLORS.primary}
+          />
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-around",
+              marginRight: 20,
+              marginLeft: 20,
+            }}
+          >
+            <CheckBox
+              title="Done"
+              checked={selectIndex === "Done"}
+              onPress={() => updateSelectIndex("Done")}
+              checkedIcon="dot-circle-o"
+              uncheckedIcon="circle-o"
+            />
+            <CheckBox
+              checked={selectIndex === "Incomplete"}
+              title="Incomplete"
+              onPress={() => updateSelectIndex("Incomplete")}
+              checkedIcon="dot-circle-o"
+              uncheckedIcon="circle-o"
+            />
+            <CheckBox
+              checked={selectIndex === "All"}
+              title="All"
+              onPress={() => updateSelectIndex("All")}
+              checkedIcon="dot-circle-o"
+              uncheckedIcon="circle-o"
+            />
+          </View>
         </View>
-      </View>
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
-        data={todos}
-        renderItem={({ item }) => <ListItem todo={item} />}
-      />
+      ) : (
+        ""
+      )}
+
+      {todos.length === 0 || filterTasks().length === 0 ? (
+        <Text style={{ marginLeft: 20, color: COLORS.complete, fontSize: 16 }}>
+          No Task
+        </Text>
+      ) : (
+        <View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginTop: 15,
+              marginLeft: 20,
+              marginRight: 20,
+            }}
+          >
+            <Text
+              style={{
+                color: COLORS.complete,
+                fontSize: 16,
+              }}
+            >
+              Result: {filterTasks().length}
+            </Text>
+
+            <IconItem
+              IconName="filter-alt"
+              // todo={() => deleteTodo(todo.id)}
+              color={COLORS.primary}
+              textName="Sort"
+            />
+
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={{ marginRight: 5 }}>Clear All</Text>
+              <Icon
+                name="delete"
+                size={25}
+                color="red"
+                onPress={clearAllTodos}
+              />
+            </View>
+          </View>
+
+          <FlatList
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ padding: 20, paddingBottom: "auto" }}
+            data={filterTasks()}
+            renderItem={({ item }) => <ListItem todo={item} />}
+          />
+        </View>
+      )}
 
       <View style={styles.footer}>
         <View style={[styles.inputContainer, isFocused && styles.inputFocused]}>
@@ -260,7 +425,8 @@ const TodoApp = () => {
 const styles = StyleSheet.create({
   footer: {
     position: "absolute",
-    bottom: 10,
+    bottom: 0,
+    paddingBottom: 10,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
@@ -321,6 +487,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    borderBottomColor: COLORS.primary,
+    borderBottomWidth: 1,
   },
 });
 export default TodoApp;
