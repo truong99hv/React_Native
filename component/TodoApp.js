@@ -9,13 +9,13 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  AsyncStorage,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import IconItem from "./IconItem";
 import SearchBarCustom from "./SearchBarCustom";
 import { CheckBox } from "react-native-elements";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const COLORS = {
   primary: "#1f145c",
@@ -31,6 +31,7 @@ const TodoApp = () => {
   const [search, setSearch] = useState("");
   const [selectIndex, setSelectIndex] = useState("All");
   const [sortOrder, setSortOrder] = useState("ASC");
+  const [createTodo, setCreateTodo] = useState(false);
 
   useEffect(() => {
     getTodosFromUserDevice();
@@ -39,6 +40,10 @@ const TodoApp = () => {
   useEffect(() => {
     saveTodoToUserDevice(todos);
   }, [todos]);
+
+  const presentlyInputAdd = () => {
+    setCreateTodo((prev) => !prev);
+  };
 
   const addTodo = () => {
     if (textInput == "") {
@@ -49,8 +54,9 @@ const TodoApp = () => {
         task: textInput,
         completed: false,
       };
-      setTodos([...todos, newTodo]);
-      // setTodos([newTodo, ...todos]);
+
+      setTodos((prevTodos) => [newTodo, ...prevTodos]);
+      setCreateTodo(false);
       setTextInput("");
       Keyboard.dismiss();
       Toast.show({
@@ -194,35 +200,12 @@ const TodoApp = () => {
 
   const updateSearch = (search) => {
     setSearch(search);
+    setCreateTodo(false);
   };
 
   const handleSort = () => {
     setSortOrder(sortOrder === "ASC" ? "DESC" : "ASC");
   };
-
-  // const filterTasks = () => {
-  //   if (search === "") {
-  //     if (selectIndex === "Done") {
-  //       return todos.filter((todo) => todo.completed);
-  //     } else if (selectIndex === "Incomplete") {
-  //       return todos.filter((todo) => !todo.completed);
-  //     } else {
-  //       return todos;
-  //     }
-  //   } else {
-  //     let filteredBySearch = todos.filter((todo) =>
-  //       todo.task.toLowerCase().includes(search.toLowerCase())
-  //     );
-
-  //     if (selectIndex === "Done") {
-  //       return filteredBySearch.filter((todo) => todo.completed);
-  //     } else if (selectIndex === "Incomplete") {
-  //       return filteredBySearch.filter((todo) => !todo.completed);
-  //     } else {
-  //       return filteredBySearch;
-  //     }
-  //   }
-  // };
 
   const filterTasks = () => {
     let filteredTasks = todos.slice();
@@ -364,6 +347,24 @@ const TodoApp = () => {
         >
           TODO APP
         </Text>
+
+        <TouchableOpacity
+          onPress={presentlyInputAdd}
+          style={{ flexDirection: "row", alignItems: "center" }}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              color: COLORS.primary,
+              marginRight: 5,
+            }}
+          >
+            Add Todo
+          </Text>
+          <View style={styles.iconContainer}>
+            <Icon name="add" color="white" size={30} />
+          </View>
+        </TouchableOpacity>
       </View>
       {todos.length > 0 || filterTasks().length > 0 ? (
         <View>
@@ -454,30 +455,37 @@ const TodoApp = () => {
 
           <FlatList
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ padding: 20, paddingBottom: "auto" }}
+            contentContainerStyle={{ padding: 20, paddingBottom: 400 }}
             data={filterTasks()}
             renderItem={({ item }) => <ListItem todo={item} />}
+            keyExtractor={(item) => item.id.toString()}
           />
         </View>
       )}
 
-      <View style={styles.footer}>
-        <View style={[styles.inputContainer, isFocused && styles.inputFocused]}>
-          <TextInput
-            style={{ flex: 1 }}
-            value={textInput}
-            placeholder="Add Todo ..."
-            onChangeText={(text) => setTextInput(text)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-        </View>
-        <TouchableOpacity onPress={addTodo}>
-          <View style={styles.iconContainer}>
-            <Icon name="add" color="white" size={30} />
+      {createTodo ? (
+        <View style={styles.footer}>
+          <View
+            style={[styles.inputContainer, isFocused && styles.inputFocused]}
+          >
+            <TextInput
+              style={{ flex: 1 }}
+              value={textInput}
+              placeholder="Add Todo ..."
+              onChangeText={(text) => setTextInput(text)}
+              onSubmitEditing={addTodo}
+            />
           </View>
-        </TouchableOpacity>
-      </View>
+
+          <TouchableOpacity onPress={addTodo}>
+            <View style={styles.iconContainer}>
+              <Icon name="add" color="white" size={30} />
+            </View>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        ""
+      )}
 
       <Toast />
     </SafeAreaView>
