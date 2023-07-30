@@ -9,11 +9,13 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  AsyncStorage,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import IconItem from "./IconItem";
 import SearchBarCustom from "./SearchBarCustom";
 import { CheckBox } from "react-native-elements";
+import Toast from "react-native-toast-message";
 
 const COLORS = {
   primary: "#1f145c",
@@ -48,8 +50,18 @@ const TodoApp = () => {
         completed: false,
       };
       setTodos([...todos, newTodo]);
+      // setTodos([newTodo, ...todos]);
       setTextInput("");
       Keyboard.dismiss();
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: `New task added (${newTodo.task}) successfully.`,
+        visibilityTime: 1500,
+        autoHide: true,
+        topOffset: 30,
+        position: "top",
+      });
     }
   };
 
@@ -103,6 +115,15 @@ const TodoApp = () => {
       return item;
     });
 
+    Toast.show({
+      type: "info",
+      text1: "Success",
+      text2: `Successfully edited the task .`,
+      visibilityTime: 1500,
+      autoHide: true,
+      topOffset: 30,
+      position: "top",
+    });
     setTodos(editedTodos);
   };
 
@@ -111,7 +132,18 @@ const TodoApp = () => {
     Alert.alert("Confirm", "Remove todos?", [
       {
         text: "Yes",
-        onPress: () => setTodos(newTodosItem),
+        onPress: () => {
+          setTodos(newTodosItem),
+            Toast.show({
+              type: "error",
+              text1: "Success",
+              text2: `Successfully deleted the task .`,
+              visibilityTime: 1500,
+              autoHide: true,
+              topOffset: 30,
+              position: "top",
+            });
+        },
       },
       {
         text: "No",
@@ -120,15 +152,44 @@ const TodoApp = () => {
   };
 
   const clearAllTodos = () => {
-    Alert.alert("Confirm", "Clear todos?", [
-      {
-        text: "Yes",
-        onPress: () => setTodos([]),
-      },
-      {
-        text: "No",
-      },
-    ]);
+    if (search === "" && selectIndex === "All") {
+      Alert.alert("Confirm", "Clear all todos?", [
+        {
+          text: "Yes",
+          onPress: () => setTodos([]),
+        },
+        {
+          text: "No",
+        },
+      ]);
+    } else {
+      Alert.alert("Confirm", "Clear filtered todos?", [
+        {
+          text: "Yes",
+          onPress: () => {
+            const remainingTodos = todos.filter((todo) => {
+              if (
+                search !== "" &&
+                !todo.task.toLowerCase().includes(search.toLowerCase())
+              ) {
+                return true;
+              }
+              if (selectIndex === "Done" && !todo.completed) {
+                return true;
+              }
+              if (selectIndex === "Incomplete" && todo.completed) {
+                return true;
+              }
+              return false;
+            });
+            setTodos(remainingTodos);
+          },
+        },
+        {
+          text: "No",
+        },
+      ]);
+    }
   };
 
   const updateSearch = (search) => {
@@ -137,56 +198,55 @@ const TodoApp = () => {
 
   const handleSort = () => {
     setSortOrder(sortOrder === "ASC" ? "DESC" : "ASC");
-    console.log("sorting");
-  };
-
-  const filterTasks = () => {
-    if (search === "") {
-      if (selectIndex === "Done") {
-        return todos.filter((todo) => todo.completed);
-      } else if (selectIndex === "Incomplete") {
-        return todos.filter((todo) => !todo.completed);
-      } else {
-        return todos;
-      }
-    } else {
-      let filteredBySearch = todos.filter((todo) =>
-        todo.task.toLowerCase().includes(search.toLowerCase())
-      );
-
-      if (selectIndex === "Done") {
-        return filteredBySearch.filter((todo) => todo.completed);
-      } else if (selectIndex === "Incomplete") {
-        return filteredBySearch.filter((todo) => !todo.completed);
-      } else {
-        return filteredBySearch;
-      }
-    }
   };
 
   // const filterTasks = () => {
-  //   let filteredTasks = todos.slice();
-
-  //   if (search !== "") {
-  //     filteredTasks = filteredTasks.filter((todo) =>
+  //   if (search === "") {
+  //     if (selectIndex === "Done") {
+  //       return todos.filter((todo) => todo.completed);
+  //     } else if (selectIndex === "Incomplete") {
+  //       return todos.filter((todo) => !todo.completed);
+  //     } else {
+  //       return todos;
+  //     }
+  //   } else {
+  //     let filteredBySearch = todos.filter((todo) =>
   //       todo.task.toLowerCase().includes(search.toLowerCase())
   //     );
-  //   }
 
-  //   if (selectIndex === "Done") {
-  //     filteredTasks = filteredTasks.filter((todo) => todo.completed);
-  //   } else if (selectIndex === "Incomplete") {
-  //     filteredTasks = filteredTasks.filter((todo) => !todo.completed);
+  //     if (selectIndex === "Done") {
+  //       return filteredBySearch.filter((todo) => todo.completed);
+  //     } else if (selectIndex === "Incomplete") {
+  //       return filteredBySearch.filter((todo) => !todo.completed);
+  //     } else {
+  //       return filteredBySearch;
+  //     }
   //   }
-
-  //   if (sortOrder === "ASC") {
-  //     filteredTasks.sort((a, b) => a.task.localeCompare(b.task));
-  //   } else if (sortOrder === "DESC") {
-  //     filteredTasks.sort((a, b) => b.task.localeCompare(a.task));
-  //   }
-
-  //   return filteredTasks;
   // };
+
+  const filterTasks = () => {
+    let filteredTasks = todos.slice();
+
+    if (search !== "") {
+      filteredTasks = filteredTasks.filter((todo) =>
+        todo.task.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (selectIndex === "Done") {
+      filteredTasks = filteredTasks.filter((todo) => todo.completed);
+    } else if (selectIndex === "Incomplete") {
+      filteredTasks = filteredTasks.filter((todo) => !todo.completed);
+    }
+
+    if (sortOrder === "ASC") {
+      filteredTasks.sort((a, b) => a.task.localeCompare(b.task));
+    } else if (sortOrder === "DESC") {
+      filteredTasks.sort((a, b) => b.task.localeCompare(a.task));
+    }
+
+    return filteredTasks;
+  };
 
   const updateSelectIndex = (index) => {
     setSelectIndex(index);
@@ -376,9 +436,9 @@ const TodoApp = () => {
 
             <IconItem
               IconName="filter-alt"
-              // todo={() => deleteTodo(todo.id)}
               color={COLORS.primary}
               textName="Sort"
+              todo={handleSort}
             />
 
             <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -418,6 +478,8 @@ const TodoApp = () => {
           </View>
         </TouchableOpacity>
       </View>
+
+      <Toast />
     </SafeAreaView>
   );
 };
