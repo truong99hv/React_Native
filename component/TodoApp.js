@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -32,6 +32,7 @@ const TodoApp = () => {
   const [selectIndex, setSelectIndex] = useState("All");
   const [sortOrder, setSortOrder] = useState("ASC");
   const [createTodo, setCreateTodo] = useState(false);
+  const textInputRef = useRef(null);
 
   useEffect(() => {
     getTodosFromUserDevice();
@@ -44,6 +45,12 @@ const TodoApp = () => {
   const presentlyInputAdd = () => {
     setCreateTodo((prev) => !prev);
   };
+
+  useEffect(() => {
+    if (createTodo) {
+      textInputRef.current?.focus();
+    }
+  }, [createTodo]);
 
   const addTodo = () => {
     if (textInput == "") {
@@ -469,6 +476,7 @@ const TodoApp = () => {
             style={[styles.inputContainer, isFocused && styles.inputFocused]}
           >
             <TextInput
+              ref={textInputRef}
               style={{ flex: 1 }}
               value={textInput}
               placeholder="Add Todo ..."
