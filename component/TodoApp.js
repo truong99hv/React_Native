@@ -285,24 +285,16 @@ const TodoApp = () => {
             style={{
               flex: 1,
               flexDirection: "row",
+              alignItems: "center",
             }}
           >
-            <View style={{ marginRight: 10 }}>
-              {!todo.completed ? (
-                <IconItem
-                  bgColor={COLORS.complete}
-                  color={COLORS.white}
-                  todo={() => markTodoComplete(todo.id)}
-                />
-              ) : (
-                <IconItem
-                  bgColor={COLORS.complete}
-                  todo={() => resetTodo(todo.id)}
-                  color={COLORS.white}
-                  IconName="done"
-                />
-              )}
-            </View>
+            <CheckBox
+              checked={!todo.completed}
+              checkedColor={COLORS.complete}
+              onPress={() =>
+                todo.completed ? resetTodo(todo.id) : markTodoComplete(todo.id)
+              }
+            />
             <Text
               style={{
                 fontWeight: "bold",
