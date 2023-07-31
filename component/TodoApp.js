@@ -549,6 +549,7 @@ const styles = StyleSheet.create({
     elevation: 12,
     borderRadius: 7,
     marginVertical: 10,
+    alignItems: "center",
   },
 
   header: {
